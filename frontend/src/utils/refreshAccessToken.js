@@ -1,27 +1,43 @@
-import api from './api';
+import api from "./api";
 
 export const refreshAccessToken = async () => {
-  // 1️⃣ Check if access token exists first
-  const existingAccessToken = localStorage.getItem('accessToken');
-  if (existingAccessToken) {
-    return existingAccessToken; // ✅ trust it unless your backend enforces refresh
-  }
-
-  // 2️⃣ No access token? Try refresh
-  const refreshToken = localStorage.getItem('refreshToken');
-  if (!refreshToken) return null;
-
   try {
-    const res = await api.post('/refresh', { token: refreshToken });
-    localStorage.setItem('accessToken', res.data.accessToken);
-    if (res.data.refreshToken) {
-      localStorage.setItem('refreshToken', res.data.refreshToken);
+    let accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    // ✅ Step 1: If access token exists, check expiry before trusting it
+    if (accessToken) {
+      const payload = JSON.parse(atob(accessToken.split(".")[1]));
+      const isExpired = payload.exp * 1000 < Date.now();
+
+      if (!isExpired) {
+        return accessToken; // Still valid ✅
+      }
     }
-    return res.data.accessToken;
+
+    // ❌ Access token missing or expired: attempt refresh
+    if (!refreshToken) return null;
+
+    const res = await api.post("/refresh", { token: refreshToken });
+    accessToken = res.data.accessToken;
+
+    // If refresh worked, persist new tokens
+    if (accessToken) {
+      localStorage.setItem("accessToken", accessToken);
+      if (res.data.refreshToken) {
+        localStorage.setItem("refreshToken", res.data.refreshToken);
+      }
+      return accessToken;
+    }
+
+    // ❌ If refresh API didn't return token, force logout
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    return null;
   } catch (err) {
-    console.error('Refresh failed:', err);
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    console.error("Refresh failed:", err);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     return null;
   }
 };
