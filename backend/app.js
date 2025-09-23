@@ -34,10 +34,5 @@ if (process.env.SELF_URL) {
   }, 5 * 60 * 1000);
 }
 
-setInterval(() => {
-  const mem = process.memoryUsage();
-  console.log(`[HEALTH] uptime=${process.uptime().toFixed(0)}s rss=${(mem.rss / 1024 / 1024).toFixed(2)}MB`);
-}, 15 * 60 * 1000);
-
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
