@@ -5,7 +5,7 @@ import api from '../utils/api';
 const AuthPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
+  const [showLogin, setShowLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
   const [signupData, setSignupData] = useState({ email: '', password: '', confirm: '' });
