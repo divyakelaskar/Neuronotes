@@ -15,14 +15,14 @@ const Navbar = ({ onCreateNode }) => {
       <div className="flex items-center space-x-4">
         <button
           onClick={onCreateNode}
-          className="px-3 py-1 bg-blue-600 text-white rounded"
+          className="px-3 py-1 bg-blue-600 text-white rounded cursor-pointer"
         >
           + New Node
         </button>
 
         <button
           onClick={handleLogout}
-          className="px-3 py-1 bg-red-500 text-white rounded"
+          className="px-3 py-1 bg-red-500 text-white rounded cursor-pointer"
         >
           Logout
         </button>
