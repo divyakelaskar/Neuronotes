@@ -8,6 +8,16 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
+});
+
+pool.on('connection', (conn) => {
+  console.log('🔗 New MySQL connection established');
+  conn.on('error', (err) => {
+    console.error('⚠️ MySQL connection error:', err.code, err.message);
+  });
+  conn.on('close', () => console.warn('🔌 MySQL connection closed'));
 });
 
 module.exports = pool;
