@@ -32,7 +32,20 @@ const Home = () => {
   const fetchGraph = async () => {
     try {
       const res = await api.get("/graph");
-      setGraphData(res.data);
+      const { nodes, links } = res.data;
+
+      // Create a lookup table for nodes by ID
+      const nodeMap = Object.fromEntries(nodes.map(node => [node.id, node]));
+
+      // Collect all target IDs
+      const targetIds = new Set(links.map(link => link.target));
+
+      // Mark nodes as root if they never appear as target
+      const nodesWithRoot = nodes.map(node => ({
+        ...node,
+        isRoot: !targetIds.has(node.id), // true if node never appears as a target
+      }));
+      setGraphData({ nodes: nodesWithRoot, links });
     } catch (err) {
       console.error("Fetch graph error", err);
     }
@@ -91,6 +104,7 @@ const Home = () => {
           nodeLabel="title"
           nodeAutoColorBy="id"
           onNodeClick={handleNodeClick}
+          nodeVal={(node) => (node.isRoot ? 6 : 2)}
         />
       </div>
 
