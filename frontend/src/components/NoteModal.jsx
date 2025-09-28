@@ -116,13 +116,27 @@ const NoteModal = ({ note, setNote, onClose, onSave, onDelete }) => {
                     {...props}
                   />
                 ),
-                ul: ({ node, ...props }) => (
-                  <ul className="list-disc pl-6 mb-2" {...props} />
-                ),
-                ol: ({ node, ...props }) => (
-                  <ol className="list-decimal pl-6 mb-2" {...props} />
-                ),
+                ul: ({ node, ...props }) => <ul className="list-disc pl-6 mb-2" {...props} />,
+                ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-2" {...props} />,
                 li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+
+                table: ({ node, ...props }) => (
+                  <table className="table-auto border-collapse w-full text-left text-sm mb-4" {...props} />
+                ),
+                thead: ({ node, ...props }) => (
+                  <thead className="bg-gray-100 text-gray-900 font-semibold" {...props} />
+                ),
+                tbody: ({ node, ...props }) => (
+                  <tbody className="divide-y divide-gray-200" {...props} />
+                ),
+                tr: ({ node, ...props }) => <tr className="hover:bg-gray-50" {...props} />,
+                th: ({ node, ...props }) => (
+                  <th className="border px-3 py-2 font-semibold" {...props} />
+                ),
+                td: ({ node, ...props }) => (
+                  <td className="border px-3 py-2 align-top" {...props} />
+                ),
+
                 code({ inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || "");
                   if (!inline && match) {
