@@ -10,19 +10,17 @@ const NoteModal = ({ note, setNote, onClose, onSave, onDelete }) => {
   const editorRef = useRef(null);
   const previewRef = useRef(null);
 
-  // Update note field
+  // Update note fields
   const handleChange = useCallback(
     (field, value) => {
-      if (!note) return;
-      setNote({ ...note, [field]: value });
+      if (note) setNote((prev) => ({ ...prev, [field]: value }));
     },
-    [note, setNote]
+    [setNote]
   );
 
-  // Fetch all other nodes for parent selection
+  // Fetch nodes for parent selection
   useEffect(() => {
     if (!note) return;
-
     const fetchNodes = async () => {
       try {
         const res = await api.get("/graph");
@@ -50,18 +48,24 @@ const NoteModal = ({ note, setNote, onClose, onSave, onDelete }) => {
     return () => editor.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close modal on Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   if (!note) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white text-black rounded-3xl shadow-2xl w-[80vw] h-[80vh] flex flex-col p-6 transform transition-transform duration-200 hover:scale-105">
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white text-black rounded-2xl shadow-2xl w-[90vw] max-w-5xl h-[85vh] flex flex-col p-6 animate-scaleIn">
         {/* Title Input */}
         <input
           type="text"
           value={note.title}
           onChange={(e) => handleChange("title", e.target.value)}
-          className="mb-2 p-3 text-lg font-bold rounded-lg bg-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/10 transition"
+          className="mb-3 p-3 text-lg font-bold rounded-lg bg-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/20"
           placeholder="Note title"
         />
 
@@ -69,12 +73,9 @@ const NoteModal = ({ note, setNote, onClose, onSave, onDelete }) => {
         <select
           value={note.parentId || ""}
           onChange={(e) =>
-            handleChange(
-              "parentId",
-              e.target.value ? Number(e.target.value) : null
-            )
+            handleChange("parentId", e.target.value ? Number(e.target.value) : null)
           }
-          className="mb-4 p-2 rounded-lg bg-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/10 transition"
+          className="mb-4 p-2 rounded-lg bg-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/20"
         >
           <option value="">No parent (top-level)</option>
           {allNodes.map((n) => (
@@ -85,12 +86,12 @@ const NoteModal = ({ note, setNote, onClose, onSave, onDelete }) => {
         </select>
 
         {/* Split Pane: Editor + Preview */}
-        <div className="flex flex-1 gap-4 overflow-hidden">
+        <div className="flex flex-1 gap-4 overflow-hidden flex-col md:flex-row">
           <textarea
             ref={editorRef}
             value={note.content}
             onChange={(e) => handleChange("content", e.target.value)}
-            className="flex-1 p-3 rounded-lg bg-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/10 resize-none overflow-auto"
+            className="flex-1 p-3 rounded-lg bg-black/10 text-black focus:outline-none focus:ring-2 focus:ring-black/20 resize-none overflow-auto"
             placeholder="Write Markdown..."
           />
 
@@ -101,28 +102,15 @@ const NoteModal = ({ note, setNote, onClose, onSave, onDelete }) => {
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                h1: ({ node, ...props }) => (
-                  <h1 className="text-3xl font-bold mb-2" {...props} />
+                h1: (props) => <h1 className="text-3xl font-bold mb-2" {...props} />,
+                h2: (props) => <h2 className="text-2xl font-semibold mb-2" {...props} />,
+                h3: (props) => <h3 className="text-xl font-semibold mb-2" {...props} />,
+                blockquote: (props) => (
+                  <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-2" {...props} />
                 ),
-                h2: ({ node, ...props }) => (
-                  <h2 className="text-2xl font-semibold mb-2" {...props} />
-                ),
-                h3: ({ node, ...props }) => (
-                  <h3 className="text-xl font-semibold mb-2" {...props} />
-                ),
-                blockquote: ({ node, ...props }) => (
-                  <blockquote
-                    className="border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-2"
-                    {...props}
-                  />
-                ),
-                ul: ({ node, ...props }) => (
-                  <ul className="list-disc pl-6 mb-2" {...props} />
-                ),
-                ol: ({ node, ...props }) => (
-                  <ol className="list-decimal pl-6 mb-2" {...props} />
-                ),
-                li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                ul: (props) => <ul className="list-disc pl-6 mb-2" {...props} />,
+                ol: (props) => <ol className="list-decimal pl-6 mb-2" {...props} />,
+                li: (props) => <li className="mb-1" {...props} />,
                 code({ inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || "");
                   if (!inline && match) {
@@ -144,12 +132,7 @@ const NoteModal = ({ note, setNote, onClose, onSave, onDelete }) => {
                   );
                 },
                 img: ({ alt, src, ...props }) => (
-                  <img
-                    src={src}
-                    alt={alt}
-                    className="max-w-full rounded mb-2"
-                    {...props}
-                  />
+                  <img src={src} alt={alt} className="max-w-full rounded mb-2" {...props} />
                 ),
               }}
             >
@@ -162,26 +145,25 @@ const NoteModal = ({ note, setNote, onClose, onSave, onDelete }) => {
         <div className="flex justify-between mt-4">
           <button
             onClick={onDelete}
-            className="px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600 shadow-md font-semibold transition"
+            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md font-semibold transition"
           >
             Delete
           </button>
-          <div className="flex space-x-2">
+          <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 text-black font-semibold transition"
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded-lg font-semibold transition"
             >
               Cancel
             </button>
             <button
               onClick={onSave}
-              className="px-4 py-2 bg-green-500 rounded-lg hover:bg-green-600 shadow-md font-semibold transition"
+              className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-md font-semibold transition"
             >
               Save
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );
