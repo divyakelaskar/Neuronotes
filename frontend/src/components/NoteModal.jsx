@@ -33,24 +33,53 @@ const NoteModal = ({ note, setNote, onClose, onSave, onDelete }) => {
     };
     fetchNodes();
   }, [note]);
+  // Scroll sync: editor ↔ preview (bi-directional, stable)
+useEffect(() => {
+  const editor = editorRef.current;
+  const preview = previewRef.current;
+  if (!editor || !preview) return;
 
-  // Scroll sync: editor → preview
-  useEffect(() => {
-    const editor = editorRef.current;
-    const preview = previewRef.current;
-    if (!editor || !preview) return;
+  let isSyncingFromEditor = false;
+  let isSyncingFromPreview = false;
 
-    const handleScroll = () => {
-      const ratio =
-        editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
-      preview.scrollTop = ratio * (preview.scrollHeight - preview.clientHeight);
-    };
+  const getScrollRatio = (el) => {
+    const scrollableHeight = el.scrollHeight - el.clientHeight;
+    return scrollableHeight > 0 ? el.scrollTop / scrollableHeight : 0;
+  };
 
-    editor.addEventListener("scroll", handleScroll);
-    return () => editor.removeEventListener("scroll", handleScroll);
-  }, []);
+  const syncFromEditor = () => {
+    if (isSyncingFromPreview) return;
+    isSyncingFromEditor = true;
+    const ratio = getScrollRatio(editor);
+    preview.scrollTop = ratio * (preview.scrollHeight - preview.clientHeight);
+    requestAnimationFrame(() => (isSyncingFromEditor = false));
+  };
+
+  const syncFromPreview = () => {
+    if (isSyncingFromEditor) return;
+    isSyncingFromPreview = true;
+    const ratio = getScrollRatio(preview);
+    editor.scrollTop = ratio * (editor.scrollHeight - editor.clientHeight);
+    requestAnimationFrame(() => (isSyncingFromPreview = false));
+  };
+
+  // Attach listeners
+  editor.addEventListener("scroll", syncFromEditor);
+  preview.addEventListener("scroll", syncFromPreview);
+
+  // Force initial sync AFTER paint
+  requestAnimationFrame(syncFromEditor);
+
+  return () => {
+    editor.removeEventListener("scroll", syncFromEditor);
+    preview.removeEventListener("scroll", syncFromPreview);
+  };
+}, [note?.content]);
+
+
 
   if (!note) return null;
+  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
