@@ -1,9 +1,24 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { decodeJWT } from '../utils/decodeJwt';
 
 const Landing = () => {
   const navigate = useNavigate();
   const canvasRef = useRef(null);
+  const [redirectPath, setRedirectPath] = useState('/auth');
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+    const payload = decodeJWT(token);
+    if (payload && payload.exp * 1000 > Date.now()) {
+      setRedirectPath('/home');
+    }
+  }, []);
+
+  const handleStart = useCallback(() => {
+    navigate(redirectPath);
+  }, [navigate, redirectPath]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -38,10 +53,9 @@ const Landing = () => {
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw links
       ctx.strokeStyle = 'rgba(255,255,255,0.3)';
       ctx.lineWidth = 1;
+
       links.forEach(([a, b]) => {
         ctx.beginPath();
         ctx.moveTo(nodes[a].x, nodes[a].y);
@@ -49,14 +63,12 @@ const Landing = () => {
         ctx.stroke();
       });
 
-      // Draw nodes
       nodes.forEach(node => {
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2);
         ctx.fillStyle = '#fff';
         ctx.fill();
 
-        // Update position
         node.x += node.vx;
         node.y += node.vy;
         if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
@@ -87,7 +99,6 @@ const Landing = () => {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col lg:flex-row items-center justify-center h-full px-6 lg:px-24">
-        {/* Left text section */}
         <div className="lg:w-1/2 mb-12 lg:mb-0 text-center">
           <h1 className="text-5xl lg:text-6xl font-extrabold mb-6">
             Neuronotes
@@ -97,7 +108,7 @@ const Landing = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => navigate('/auth')}
+              onClick={handleStart}
               className="px-8 py-4 bg-white text-purple-600 font-semibold rounded-lg hover:bg-purple-600 hover:text-white transition"
             >
               Get Started
@@ -105,6 +116,19 @@ const Landing = () => {
           </div>
         </div>
       </div>
+
+      {/* Footer with LinkedIn link */}
+      <footer className="absolute bottom-2 w-full text-center text-md text-white/70 z-10">
+        Built by {' '}
+        <a
+          href="https://www.github.com/divyakelaskar/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-white transition"
+        >
+          Divya Kelaskar
+        </a>
+      </footer>
     </div>
   );
 };
