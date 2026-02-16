@@ -2,7 +2,7 @@
 
 A visual, markdown-powered note-taking application that organizes your thoughts as an interactive knowledge graph. Create, connect, and visualize your notes in a dynamic network where each node represents a note and links represent relationships.
 
-[![Youtube video redirect link](http://img.youtube.com/vi/pI4hRxJRlJE/maxresdefault.jpg)](http://www.youtube.com/watch?vpI4hRxJRlJE "Youtube video redirect link")
+[![Youtube video redirect link](http://img.youtube.com/vi/pI4hRxJRlJE/maxresdefault.jpg)](https://www.youtube.com/watch?v=pI4hRxJRlJE "Youtube video redirect link")
 
 ## ✨ Features
 
