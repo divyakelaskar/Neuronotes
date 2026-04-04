@@ -1,133 +1,162 @@
 # Neuronotes
 
-A visual, markdown-powered note-taking application that organizes your thoughts as an interactive knowledge graph. Create, connect, and visualize your notes in a dynamic network where each node represents a note and links represent relationships.
+A full-stack, graph-based note-taking application that models knowledge as a connected network of nodes and relationships. Built with a focus on relational data modeling, API design, and real-time graph visualization.
 
-[![Youtube video redirect link](http://img.youtube.com/vi/pI4hRxJRlJE/maxresdefault.jpg)](https://www.youtube.com/watch?v=pI4hRxJRlJE "Youtube video redirect link")
+[![Demo](http://img.youtube.com/vi/pI4hRxJRlJE/maxresdefault.jpg)](https://www.youtube.com/watch?v=pI4hRxJRlJE)
 
-## ✨ Features
+---
 
-- **Interactive Knowledge Graph** - Visualize your notes as an interconnected network using an interactive force-directed graph
-- **Markdown Support** - Write notes in Markdown with live preview, syntax highlighting, and GitHub Flavored Markdown support
-- **Hierarchical Organization** - Create parent-child relationships between notes to build structured knowledge trees
-- **Real-time Graph Updates** - Watch your knowledge graph grow and reorganize as you create and edit notes
-- **Split-pane Editor** - Simultaneously edit and preview your markdown with synchronized scrolling
-- **Responsive Design** - Clean, modern UI that works across devices
+## 🚀 Key Features
 
-## 🚀 Tech Stack
+* Graph-based note system with dynamic node-link relationships
+* Markdown editor with live preview and syntax highlighting
+* Real-time graph updates on create/edit/delete operations
+* JWT-based authentication with protected routes
+* Hierarchical and relational note organization
+* Interactive force-directed graph visualization
 
-- **Frontend**: React 18, React Router v6
-- **Visualization**: react-force-graph-2d
-- **Styling**: Tailwind CSS
-- **Markdown**: react-markdown with remark-gfm
-- **Code Highlighting**: react-syntax-highlighter
-- **HTTP Client**: Axios
+---
 
-## 📋 Prerequisites
+## 🧱 Tech Stack
 
-- Node.js (v14 or higher)
-- npm or yarn
+**Frontend**
 
-## 🔧 Installation
+* React 18, React Router
+* Tailwind CSS
+* react-force-graph-2d
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/neuronotes.git
-cd neuronotes
+**Backend**
+
+* Node.js, Express
+* JWT Authentication
+
+**Database**
+
+* MySQL (relational schema with graph modeling)
+
+---
+
+## 🗄️ Data Architecture
+
+The application models a **knowledge graph using a relational database**.
+
+### Core Tables
+
+* `users` → application users
+* `notes` → individual note entities
+* `note_links` → directed relationships between notes (graph edges)
+
+### Graph Modeling Strategy
+
+* Each note represents a node
+* Relationships stored as directed edges:
+  `source_note_id → target_note_id`
+* Enables efficient traversal and dynamic visualization
+
+### Design Decisions
+
+* Relational DB used for strong consistency and referential integrity
+* Foreign keys with `ON DELETE CASCADE` ensure graph consistency
+* `user_id` enforced across tables for data isolation
+* Indexed relationship queries for performance
+
+---
+
+## ⚡ Query Patterns
+
+### Fetch full graph
+
+```sql
+SELECT source_note_id, target_note_id
+FROM note_links
+WHERE user_id = ?;
 ```
 
-2. Install dependencies:
-```bash
-npm install
+### Fetch notes with connections
+
+```sql
+SELECT n.*, nl.target_note_id
+FROM notes n
+LEFT JOIN note_links nl ON n.id = nl.source_note_id
+WHERE n.user_id = ?;
 ```
 
-3. Create a `.env` file in the root directory:
-```env
-VITE_API_URL=http://localhost:3000/api
+---
+
+## 🔐 Authentication
+
+* JWT-based authentication (access + refresh tokens)
+* Protected routes with middleware validation
+* Token refresh mechanism
+* User-scoped queries to prevent unauthorized access
+
+---
+
+## 📡 API Design
+
+```http
+GET    /graph           - Fetch full graph (nodes + edges)
+GET    /notes/:id       - Fetch single note
+POST   /notes           - Create note
+PUT    /notes/:id       - Update note
+DELETE /notes/:id       - Delete note
+POST   /auth/login      - Login
+POST   /auth/register   - Register
+POST   /auth/refresh    - Refresh token
 ```
 
-4. Start the development server:
-```bash
-npm run dev
-```
+---
+
+## 🎯 Core Functionality
+
+### Graph Engine
+
+* Force-directed graph visualization
+* Dynamic node sizing (root vs connected nodes)
+* Real-time updates on structural changes
+
+### Note System
+
+* Create, edit, delete notes
+* Define parent-child relationships
+* Dynamically reorganize graph structure
+
+### Markdown Engine
+
+* GitHub Flavored Markdown
+* Syntax highlighting
+* Live preview with scroll sync
+
+---
+
+## 🚀 Performance Considerations
+
+* Indexed `(user_id, source_note_id, target_note_id)` for fast queries
+* Optimized joins for graph traversal
+* Reduced payload size in API responses
+* Controlled re-renders in graph updates
+
+---
 
 ## 🏗️ Project Structure
 
 ```
 src/
 ├── pages/
-│   ├── Home.jsx          # Main graph view
-│   ├── Landing.jsx       # Landing page
-│   └── LoginSignup.jsx   # Authentication page
 ├── components/
-│   ├── Navbar.jsx        # Navigation with create/logout
-│   ├── NoteModal.jsx     # Markdown editor with preview
-│   └── CreateNodeModal.jsx # Node creation dialog
 ├── utils/
-│   └── api.js            # Axios instance with auth interceptor
-├── ProtectedRoute.jsx    # Route protection wrapper
-└── App.jsx               # Main router configuration
+├── services/
+├── middleware/
+└── App.jsx
 ```
-
-## 🎯 Core Functionality
-
-### Knowledge Graph Visualization
-- Nodes represent individual notes
-- Links represent parent-child relationships
-- Root nodes (notes without parents) appear larger
-- Click any node to open and edit its content
-
-### Note Management
-- Create new notes with optional parent relationships
-- Edit notes with real-time Markdown preview
-- Delete notes with confirmation
-- Reorganize notes by changing parent relationships
-
-### Markdown Features
-- Headers (h1, h2, h3)
-- Lists (ordered and unordered)
-- Blockquotes
-- Tables with styling
-- Code blocks with syntax highlighting
-- Images
-- GitHub Flavored Markdown support
-
-## 🔐 Authentication
-
-The app uses JWT-based authentication:
-- Login/Register through the `/auth` route
-- Protected routes redirect unauthorized users
-- Tokens stored in localStorage
-- Automatic token refresh on expiration
-
-## 🖥️ API Integration
-
-Expected backend endpoints:
-
-```
-GET    /graph           - Fetch all nodes and links
-GET    /notes/:id       - Fetch single note
-POST   /notes           - Create new note
-PUT    /notes/:id       - Update note
-DELETE /notes/:id       - Delete note
-POST   /auth/login      - User login
-POST   /auth/register   - User registration
-POST   /auth/refresh    - Refresh access token
-```
-
-## 🎨 UI/UX Highlights
-
-- **Smooth Animations** - Modal transitions and graph interactions
-- **Keyboard Shortcuts** - Enter to create node, Escape to close modals
-- **Scroll Sync** - Editor and preview scrolling stay in sync
-- **Visual Feedback** - Hover effects, shadows, and scaling transforms
-- **Dark/Light Mode** - Clean, readable interface with proper contrast
-
-## 🙏 Acknowledgments
-
-- [react-force-graph](https://github.com/vasturiano/react-force-graph) for the amazing visualization library
-- [Tailwind CSS](https://tailwindcss.com) for the utility-first styling
-- [React Markdown](https://github.com/remarkjs/react-markdown) for markdown rendering
 
 ---
 
-**Built with ❤️ for knowledge workers and visual thinkers**
+## 🧠 Summary
+
+This project demonstrates:
+
+* Graph modeling using relational databases
+* Backend API design with authentication
+* Efficient querying of connected data
+* Real-time UI synchronization for dynamic systems
